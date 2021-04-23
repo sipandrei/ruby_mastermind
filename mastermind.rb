@@ -44,6 +44,7 @@ class CodeMaker < NumberFunctions
     else
       make_number
       puts '--- The computer picked his number ---'
+      puts ''
     end
   end
 end
@@ -52,13 +53,24 @@ end
 class CodeBreaker < NumberFunctions
   attr_reader :turns, :game_ended
 
-  def initialize(type)
+  def initialize(type, turns)
     super(nil)
     @type = type
-    @turns = 12
+    @turns = turns
     @game_ended = false
     @player = type == true ? 'You' : 'The computer'
   end
+
+  def play_turn(code_maker_object)
+    if @type == true
+      player_input(code_maker_object)
+    else
+      computer_input(code_maker_object)
+    end
+    puts ''
+  end
+
+  private
 
   def player_input(code_maker_object)
     read_num
@@ -70,7 +82,7 @@ class CodeBreaker < NumberFunctions
     number_feedback
 
     @turns -= 1
-    turns_done
+    turns_done(code_maker_object.number)
   end
 
   def computer_input(code_maker_object)
@@ -82,22 +94,23 @@ class CodeBreaker < NumberFunctions
     number_feedback
 
     @turns -= 1
-    turns_done
+    turns_done(code_maker_object.number)
+    sleep(1)
   end
 
-  private
-
-  def turns_done
+  def turns_done(code_maker_number)
+    puts ''
     if @turns.zero?
       @game_ended = true
-      puts "--- No more turns left, #{@player.downcase} lost. ---"
-    else
+      puts "--- No more turns left, #{@player.downcase} lost, the correct number was #{code_maker_number.join}. ---"
+    elsif !@game_ended
       puts "#{@turns} more turns to go!"
     end
   end
 
   def number_feedback
     if @good_place == 4
+      puts "\n"
       puts "--- #{@player.capitalize} won the game! ---"
       @game_ended = true
     else
@@ -120,4 +133,19 @@ class CodeBreaker < NumberFunctions
   end
 end
 
- puts "Do you want to play as the Code Maker or as the Code Breaker?"
+puts 'Do you want to play as the Code Maker or as the Code Breaker?'
+choice = ''
+until choice.upcase == 'M' || choice.upcase == 'B'
+  puts 'Answer with M or B'
+  choice = gets.chomp
+  choice = choice[0]
+end
+
+type = choice.upcase == 'M'
+
+puts ''
+
+cm = CodeMaker.new(type)
+cb = CodeBreaker.new(!type, 12)
+
+cb.play_turn(cm) while cb.game_ended == false
