@@ -1,23 +1,14 @@
-# Code maker
-class CodeMaker
-  def initialize(type)
-    case type
-    when type == true
-      puts 'Give a four-digit number with each digit smaller than 6'
-      @number = gets.chomp.split('').map { |digit| digit.to_i }
-      number_cleaning
-    when type == false
-      make_number
-    end
+# class for number cleaning
+class NumberFunctions
+  def initialize(number)
+    @number = number
   end
 
-  private
+  protected
 
-  def make_number
-    @number = []
-    4.times do
-      @number.push(@possible_digit.sample)
-    end
+  def read_num
+    puts 'Give a four-digit number with each digit smaller than 6'
+    @number = gets.chomp.split('').map(&:to_i)
   end
 
   def number_cleaning
@@ -28,22 +19,105 @@ class CodeMaker
         (4 - @number.length).times { @number.push((Array 1..6).sample) }
       end
       @number.each_with_index { |digit, index| @number[index] = 6 unless digit.between?(1, 6) }
-      p @number
     else
       puts 'You need to pass an array'
+    end
+  end
+
+  def make_number
+    @number = []
+    4.times do
+      @number.push((Array 1..6).sample)
+    end
+  end
+end
+
+# Code maker
+class CodeMaker < NumberFunctions
+  attr_reader :number
+
+  def initialize(type)
+    if type == true
+      read_num
+      super(@number)
+      number_cleaning
+    else
+      make_number
+      puts '--- The computer picked his number ---'
     end
   end
 end
 
 # Code breaker
-class CodeBreaker
-  @turns = 12
+class CodeBreaker < NumberFunctions
+  attr_reader :turns, :game_ended
+
   def initialize(type)
+    super(nil)
     @type = type
+    @turns = 12
+    @game_ended = false
+    @player = type == true ? 'You' : 'The computer'
   end
 
-  def play_game
+  def player_input(code_maker_object)
+    read_num
+    number_cleaning
+
+    good_place(code_maker_object.number)
+    good_numbers(code_maker_object.number)
+
+    number_feedback
+
+    @turns -= 1
+    turns_done
+  end
+
+  def computer_input(code_maker_object)
+    make_number
+    puts "The computer picked #{@number.join} as his choice"
+    good_place(code_maker_object.number)
+    good_numbers(code_maker_object.number)
+
+    number_feedback
+
+    @turns -= 1
+    turns_done
+  end
+
+  private
+
+  def turns_done
+    if @turns.zero?
+      @game_ended = true
+      puts "--- No more turns left, #{@player.downcase} lost. ---"
+    else
+      puts "#{@turns} more turns to go!"
+    end
+  end
+
+  def number_feedback
+    if @good_place == 4
+      puts "--- #{@player.capitalize} won the game! ---"
+      @game_ended = true
+    else
+      puts "#{@good_numbers} correct numbers and #{@good_place} numbers in the right spot"
+    end
+  end
+
+  def good_place(code_maker_number)
+    @good_place = 0
+    @number.each_with_index do |digit, index|
+      @good_place += 1 if digit == code_maker_number[index]
+    end
+  end
+
+  def good_numbers(code_maker_number)
+    @good_numbers = 0
+    @number.uniq.each do |digit|
+      @good_numbers += 1 if code_maker_number.include?(digit)
+    end
   end
 end
 
-CodeMaker.new(true)
+ puts "Do you want to play as the Code Maker or as the Code Breaker?"
